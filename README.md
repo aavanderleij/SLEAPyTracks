@@ -1,17 +1,19 @@
 
 # README SLEAPyTracks #
-.
+* Version 0.2.1
+
 
 ## What is this repository for? ##
-
-
 
 This is a tracker for tracking exploration behavior of the red knot. Currently trained for use on red knot exploration tests.
 Runs a trained SLEAP model over multiple videos and returns tracking data as a csv file.
 
-Sinds SLEAP version 1.3.3 this program is mostly deprecated.
+With the update of SLEAP version 1.3.3, SLEAP also added the option to save in CSV but this wrapper adds minor quality
+of live changes.
 
-* Version 0.2.0
+The main differences are: 
+* SLEAPyTracks will search input directory (and all subdirectories) for videos and analyze all found mp4 files
+* Slight changes in CVS output
 
 ## Installation ##
 
