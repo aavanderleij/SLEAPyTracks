@@ -84,7 +84,7 @@ with the Anaconda powershell start the sleap virtual environment
 conda activate sleap
 ```
 
-with the Anaconda powershell go into the map for SLEAPyTracks
+with the Anaconda powershell go into the map for SLEAPyTracks (the location of this readme)
 
 ```bash
 cd SLEAPyTracks
@@ -96,9 +96,10 @@ SLEAPyTracks will look for and process all mp4 video file in this directory and 
 python SLEAPyTracks "path/to/your/video_dir/location/"
 ```
 
-Default output location can be found in the video directory under "predictions/"
+Default output location can be found in the input directory under "predictions/"
 
-Files are saved as csv files
+Files are saved as csv and .slp with the name of the video.
+
 
 ### more options: ###
 
