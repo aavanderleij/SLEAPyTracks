@@ -90,7 +90,7 @@ with the Anaconda powershell go into the map for SLEAPyTracks (the location of t
 cd SLEAPyTracks
 ```
 run SLEAPyTracks on the directory you want to track.
-SLEAPyTracks will look for and process all mp4 video file in this directory and its subdirectories.
+SLEAPyTracks will look for and process **all mp4 video files** in this directory and its subdirectories.
 
 ```bash
 python SLEAPyTracks "path/to/your/video_dir/location/"
@@ -116,8 +116,13 @@ track more than one animal in a video (e.g 3 animals):
 python SLEAPyTracks "path/to/your/video_dir/location/" -t -n 3
 ```
 
+## FAQ ## 
 
+#### Videos take a long time to analyze. Can I make it go faster?
+* Try running it on a pc with a GPU or a High Preformance Culster
 
+#### SLEAPyTracks skips some of my videos? It said there was an error?
+* This is likely an index error while trying to read the video. Adding -f option will cause the program to copy and re-index you video's.
 ## References ##
 
 ### SLEAP ###

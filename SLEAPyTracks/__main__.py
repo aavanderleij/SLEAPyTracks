@@ -26,6 +26,7 @@ if __name__ == "__main__":
     from SLEAP_parser import SleapParser
     from SLEAP_model import SLEAPModel
 
+    # fixing videos can lead to problems
     if args.fix_videos:
         print("Warning: The '--fix_videos' option is enabled.")
         print(
@@ -33,7 +34,9 @@ if __name__ == "__main__":
             "will be copied and re-indexed. This can easily fill up your storage as every video will potentiality be "
             "duplicated! Please check your storage before proceeding.")
         print("please check the SLEAP faq for more info.")
+
         confirm = input("Do you want to continue? (y/n): ").strip().lower()
+
         if confirm not in ['yes', 'y']:
             print("Operation aborted by the user.")
             exit(0)
