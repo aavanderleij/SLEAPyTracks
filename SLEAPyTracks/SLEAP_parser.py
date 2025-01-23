@@ -114,13 +114,13 @@ class SleapParser:
     def get_results(self, output_dir):
         print("converting to csv")
         # directory with the slp files
-        predict_dir = os.path.join(output_dir, "prediction_slp_files")
-        csv_output = os.path.join(output_dir, 'csv_output')
+        predict_dir = os.path.join(output_dir, "predictions", "slp_files")
+        csv_output = os.path.join(output_dir, "predictions", 'csv_files')
 
         files = self.get_files_from_dir(predict_dir, ".slp")
         print(files)
         for file in files:
-            self.sleap_to_pandas(predict_dir + "/" + file, csv_output )
+            self.sleap_to_pandas(predict_dir + "/" + file, csv_output)
 
         print("output can be found at:")
         print(csv_output)
