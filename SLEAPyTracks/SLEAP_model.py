@@ -13,6 +13,7 @@ import glob
 import subprocess
 import sleap
 
+
 class SLEAPModel:
     """
     A Class that predicts animal poses using a video as input.
@@ -24,7 +25,7 @@ class SLEAPModel:
 
         self.video_dir = video_dir
         self.model = self.load_model()
-        self.predictions_out_dir = os.path.join(predictions_out_dir, "prediction_slp_files")
+        self.predictions_out_dir = os.path.join(predictions_out_dir, "predictions", "slp_files")
 
     def get_files_from_dir(self, path, file_extension):
         """
@@ -52,8 +53,6 @@ class SLEAPModel:
         find videos in self.video_dir and return a list of all videos in self.video_dir
         :return:
         """
-        import os
-
         video_files = []
         for root, dirs, files in os.walk(self.video_dir):
             for file in files:
@@ -98,7 +97,7 @@ class SLEAPModel:
         print(labels)
         print("initializing tracker")
 
-        # Here I'm removing the tracks so we just have instances without any tracking applied.
+        # Here I'm removing the tracks, so we just have instances without any tracking applied.
         for instance in labels.instances():
             instance.track = None
         labels.tracks = []
@@ -159,11 +158,12 @@ class SLEAPModel:
 
         return labels
 
-    def predict(self, instance_count, tracking):
+    def predict(self, instance_count, tracking, fix_videos):
         """
         run model over every video in target directory and actives tracking if tracking is True
         :param instance_count: (int) amount of expected animals in videos
-        :param tracking: (boolean)
+        :param tracking: (boolean) activate tracking if True
+        :param fix_videos: (boolean) fix idex erros
 
         """
 
@@ -183,12 +183,10 @@ class SLEAPModel:
                 print("skipping prediction for this video")
                 continue
 
-
             print("run prediction for:")
             print(video_name)
             # use video name as name for predictions save file
             sleap_video = self.load_video(video)
-
 
             # make directory for sleap predictions one doesn't exist
             if not os.path.isdir(self.predictions_out_dir):
@@ -202,10 +200,43 @@ class SLEAPModel:
                 logging.info(f"slp file at {slp_file}")
             # ffmpeg command is a quick fix for KeyError while indexing
             except KeyError:
-                print("ran into error while indexing video: " + video_name)
-                print("please check the SLEAP faq for more info.")
-                print("continue with next video (if there are any)...")
-                continue
+
+                if fix_videos:
+                    # Define the fixed_videos folder
+                    fixed_videos_dir = os.path.join(self.video_dir, "fixed_videos")
+                    os.makedirs(fixed_videos_dir, exist_ok=True)
+
+                    print("ran into error while indexing video: " + video)
+                    print("Attempting to fix it. please wait...")
+
+                    # Extract just the filename of the video
+                    video_name = os.path.basename(video)
+
+                    # Construct the fixed video path
+                    fixed_video_path = os.path.join(fixed_videos_dir, "fixed_" + video_name)
+
+                    # Run ffmpeg to re-index and save the fixed video
+                    subprocess.run(
+                        ["ffmpeg", "-y", "-i", os.path.join(self.video_dir, video), "-c:v", "libx264", "-pix_fmt",
+                         "yuv420p",
+                         "-preset", "superfast", "-crf", "23", fixed_video_path]
+                    )
+
+                    try:
+                        sleap_video = self.load_video(fixed_video_path)
+                        labels = self.run_model(sleap_video)
+                        labels.save(slp_file)
+                        logging.info(f"slp file at {slp_file}")
+
+                    except KeyError:
+                        print("unable to fix video")
+                        print("continue with next video (if there are any)")
+                        continue
+                else:
+                    print("ran into error while indexing video: " + video_name)
+                    print("please check the SLEAP faq for more info.")
+                    print("continue with next video (if there are any)...")
+                    continue
 
             # if tracking flag is set to True start tracking function
             if tracking:
@@ -216,7 +247,7 @@ class SLEAPModel:
 
                 tracked_labels.save("predictions/tracks/" + save_name)
 
-            print(f"done with {i+1} of {len(videos)} videos")
+            print(f"done with {i + 1} of {len(videos)} videos")
 
 
 def main():
