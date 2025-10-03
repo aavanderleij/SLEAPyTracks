@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-Uses a model that was trained with SLEAP and uses it to estimate keypoint positions of the red knot in video's.
+Uses a model that was trained with SLEAP and uses it to estimate keypoint positions
+of the red knot in video's.
 
 autor: Antsje van der Leij
 
@@ -29,7 +30,9 @@ class SLEAPModel:
 
     def get_files_from_dir(self, path, file_extension):
         """
-        gets files names ending with the file exetntion from target directory and returns those files as a list
+        gets files names ending with the file exetntion from target directory and
+        returns those files as a list
+
         :param path: absolute path to target directory
         :param file_extension: the extension of retrieved files
         :return: list with files ending with the file_extension
@@ -40,7 +43,8 @@ class SLEAPModel:
             sys.exit("File path to videos does not exist or is incorrect!")
 
         # get only one type of file
-        files = [f for f in os.listdir(path) if f.endswith(file_extension) or f.endswith(file_extension.upper())]
+        files = [f for f in os.listdir(path) if f.endswith(file_extension)
+                 or f.endswith(file_extension.upper())]
 
         # check if any files match file type
         if not files:

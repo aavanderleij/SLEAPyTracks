@@ -17,6 +17,13 @@ class SleapParser:
     """
 
     def get_files_from_dir(self, path, file_extension):
+        """
+        returns all files from a directory and sub-directories that end with file_extension
+
+        Args:
+            path (str): path of directory
+            file_extension (str): extention of file's to retreve from directories
+        """
 
         print("get files")
 
@@ -25,7 +32,7 @@ class SleapParser:
             print(path)
             sys.exit("File path to videos does not exist or is incorrect!")
 
-        # get only one type of file
+        # get files that end with file_extension
         files = [f for f in os.listdir(path) if f.endswith(file_extension) or f.endswith(file_extension.upper())]
 
         # check if any files match file type
@@ -43,8 +50,9 @@ class SleapParser:
 
         print("making data frame...")
         # make list with standard SLEAP data
-        sleap_video_datatypes = [("video", str), ("video_height", int), ("video_width", int), ("frame_idx", int),
-                                 ("instance_id", int), ("score", int), ("fps", int)]
+        sleap_video_datatypes = [("video", str), ("video_height", int), ("video_width", int),
+                                 ("frame_idx", int), ("instance_id", int), ("score", int),
+                                 ("fps", int)]
         # add nodes from the skeleton used in de video
         for name in node_names:
             # set x and y coordinates
@@ -58,6 +66,9 @@ class SleapParser:
         return data_frame
 
     def sleap_to_pandas(self, filename, output_dir):
+        """
+        Loads data from a .slp file (sleap) into a pandas data frame and saves it as a csv
+        """
         # load SLEAP (.slp) file
         labels = sleap.load_file(filename)
         # get video name for dataframe csv
@@ -111,13 +122,16 @@ class SleapParser:
         data_frame.to_csv(csv_path)
 
     def get_results(self, output_dir):
-            print("converting to csv")
-            # Instead of a central predictions folder, search for .slp files in all subfolders
-            for root, dirs, files in os.walk(output_dir):
-                for file in files:
-                    if file.endswith(".slp"):
-                        self.sleap_to_pandas(os.path.join(root, file), root)
-            print("output csv files are saved next to their respective videos.")
+        """
+        converts all .slp file to csv files
+        
+        """
+        print("converting to csv")
+        for root, dirs, files in os.walk(output_dir):
+            for file in files:
+                if file.endswith(".slp"):
+                    self.sleap_to_pandas(os.path.join(root, file), root)
+        print("output csv files are saved next to their respective videos.")
 
 
 
