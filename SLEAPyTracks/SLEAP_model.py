@@ -55,6 +55,9 @@ class SLEAPModel:
         """
         video_files = []
         for root, dirs, files in os.walk(self.video_dir):
+            # Skip 'fixed_videos' directories
+            if "fixed_videos" in root:
+                continue
             for file in files:
                 if file.endswith((".mp4", "MP4")):
                     video_files.append(os.path.join(root, file))
