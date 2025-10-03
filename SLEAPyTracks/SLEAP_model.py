@@ -172,11 +172,12 @@ class SLEAPModel:
         for i, video in enumerate(videos):
 
             # get video names
+            video_dir = os.path.dirname(video)
             video_name = os.path.basename(video)
             save_name = os.path.splitext(video_name)[0]
 
-            # file path to save sleap predictions
-            slp_file = os.path.join(self.predictions_out_dir, save_name + ".slp")
+            # Save .slp in the same folder as the video
+            slp_file = os.path.join(video_dir, save_name + ".slp")
 
             if os.path.isfile(slp_file):
                 print(f"predictions for video {video_name} already exist")
@@ -188,10 +189,10 @@ class SLEAPModel:
             # use video name as name for predictions save file
             sleap_video = self.load_video(video)
 
-            # make directory for sleap predictions one doesn't exist
-            if not os.path.isdir(self.predictions_out_dir):
-                os.makedirs(self.predictions_out_dir)
-                logging.debug("made a new directory for sleap predictions")
+            # # make directory for sleap predictions one doesn't exist
+            # if not os.path.isdir(self.predictions_out_dir):
+            #     os.makedirs(self.predictions_out_dir)
+            #     logging.debug("made a new directory for sleap predictions")
 
             # most common error is KeyError while indexing videos
             try:
@@ -203,7 +204,7 @@ class SLEAPModel:
 
                 if fix_videos:
                     # Define the fixed_videos folder
-                    fixed_videos_dir = os.path.join(self.video_dir, "fixed_videos")
+                    fixed_videos_dir = os.path.join(video_dir, "fixed_videos")
                     os.makedirs(fixed_videos_dir, exist_ok=True)
 
                     print("ran into error while indexing video: " + video)
@@ -243,9 +244,7 @@ class SLEAPModel:
                 print("tracking...")
                 print("this can take a few minutes")
                 tracked_labels = self.run_tracker(labels, instance_count)
-                print(tracked_labels)
-
-                tracked_labels.save("predictions/tracks/" + save_name)
+                tracked_labels.save(os.path.join(video_dir, save_name + "_tracked.slp"))
 
             print(f"done with {i + 1} of {len(videos)} videos")
 

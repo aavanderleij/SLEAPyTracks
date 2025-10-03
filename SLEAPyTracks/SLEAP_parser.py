@@ -107,23 +107,18 @@ class SleapParser:
                 data_frame = pandas.concat([data_frame, df1], ignore_index=True)
         # change extension for file name
         # save to csv
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-        data_frame.to_csv(output_dir + "/" + video_name + ".csv")
+        csv_path = os.path.join(os.path.dirname(filename), video_name + ".csv")
+        data_frame.to_csv(csv_path)
 
     def get_results(self, output_dir):
-        print("converting to csv")
-        # directory with the slp files
-        predict_dir = os.path.join(output_dir, "predictions", "slp_files")
-        csv_output = os.path.join(output_dir, "predictions", 'csv_files')
+            print("converting to csv")
+            # Instead of a central predictions folder, search for .slp files in all subfolders
+            for root, dirs, files in os.walk(output_dir):
+                for file in files:
+                    if file.endswith(".slp"):
+                        self.sleap_to_pandas(os.path.join(root, file), root)
+            print("output csv files are saved next to their respective videos.")
 
-        files = self.get_files_from_dir(predict_dir, ".slp")
-        print(files)
-        for file in files:
-            self.sleap_to_pandas(predict_dir + "/" + file, csv_output)
-
-        print("output can be found at:")
-        print(csv_output)
 
 
 def main():
