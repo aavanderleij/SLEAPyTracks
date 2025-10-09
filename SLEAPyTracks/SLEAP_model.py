@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Uses a model that was trained with SLEAP and uses it to estimate keypoint positions
+Uses a model that was trained with SLEAP and uses it to estimate key point positions
 of the red knot in video's.
 
-autor: Antsje van der Leij
+author: Antsje van der Leij
 
 """
 
@@ -30,7 +30,7 @@ class SLEAPModel:
 
     def get_files_from_dir(self, path, file_extension):
         """
-        gets files names ending with the file exetntion from target directory and
+        gets files names ending with the file extension from target directory and
         returns those files as a list
 
         :param path: absolute path to target directory
@@ -95,7 +95,7 @@ class SLEAPModel:
     def run_tracker(self, labels, instance_count):
 
         """
-        initialises SLEAP tracker
+        initializes SLEAP tracker
         :param labels: SLEAP Labels object
         :param instance_count: int
         :return: SLEAP Labels object
@@ -170,7 +170,7 @@ class SLEAPModel:
         run model over every video in target directory and actives tracking if tracking is True
         :param instance_count: (int) amount of expected animals in videos
         :param tracking: (boolean) activate tracking if True
-        :param fix_videos: (boolean) fix idex erros
+        :param fix_videos: (boolean) fix idex errors
 
         """
 
@@ -225,7 +225,8 @@ class SLEAPModel:
 
                     # Run ffmpeg to re-index and save the fixed video
                     subprocess.run(
-                        ["ffmpeg", "-y", "-i", os.path.join(self.video_dir, video), "-c:v", "libx264", "-pix_fmt",
+                        ["ffmpeg", "-y", "-i", os.path.join(self.video_dir, video),
+                         "-c:v", "libx264", "-pix_fmt",
                          "yuv420p",
                          "-preset", "superfast", "-crf", "23", fixed_video_path]
                     )
