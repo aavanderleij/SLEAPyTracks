@@ -22,7 +22,7 @@ class SleapParser:
 
         Args:
             path (str): path of directory
-            file_extension (str): extention of file's to retreve from directories
+            file_extension (str): extension of file's to retrieve from directories
         """
 
         print("get files")
@@ -51,8 +51,8 @@ class SleapParser:
         print("making data frame...")
         # make list with standard SLEAP data
         sleap_video_datatypes = [("video", str), ("video_height", int), ("video_width", int),
-                                 ("frame_idx", int), ("instance_id", int), ("score", int),
-                                 ("fps", int)]
+                                 ("frame_idx", int), ("fps", int), ("instance_id", int),
+                                 ("instance_score", int)]
         # add nodes from the skeleton used in de video
         for name in node_names:
             # set x and y coordinates
@@ -91,7 +91,6 @@ class SleapParser:
         for frame in labels.labeled_frames:
             frame_id = frame.frame_idx
             for count, instance in enumerate(frame.predicted_instances):
-                # print(instance.skeleton.node_names)
                 node_points = instance.nodes_points
                 score = instance.score
                 # make a new row for data frame
@@ -119,7 +118,7 @@ class SleapParser:
         # change extension for file name
         # save to csv
         csv_path = os.path.join(os.path.dirname(filename), video_name + ".csv")
-        data_frame.to_csv(csv_path)
+        data_frame.to_csv(csv_path, index=False)
 
     def get_results(self, output_dir):
         """
