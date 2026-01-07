@@ -263,6 +263,5 @@ def main():
     model = SLEAPModel(args.video_dir)
     model.predict()
 
-
 if __name__ == "__main__":
     sys.exit(main())
