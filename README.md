@@ -1,24 +1,25 @@
 
 # README SLEAPyTracks #
-* Version 0.2.2
+* Version 1.0.0
 
 
 ## What is this repository for? ##
 
 This is a tracker for tracking exploration behavior of the red knot. Currently trained for use on red knot exploration tests.
-Runs a trained SLEAP model over multiple videos and returns tracking data as a csv file.
+Runs a trained SLEAP model over multiple videos and returns tracking data as CSV files.
 
-With the update of SLEAP version 1.3.3, SLEAP also added the option to save in CSV but this wrapper adds minor quality of live changes.
+With the update of SLEAP version 1.5.0, major changes were made to the framework.
 
-The main differences are: 
+Main functionality: 
 * SLEAPyTracks will search input directory (and all subdirectories) for videos and analyze all found mp4 files.
-* Custom CVS output.
+* CSV files and SLP files are saved in the location of the video.
+* Custom CVS output will contain the pixel coordinates and scores of every tracked instance.
 
 ## Installation ##
 
-SLEAPyTracks uses the SLEAP library. So first we install SLEAP using miniconda.
+I recommend reading the [installation documentation](https://nn.sleap.ai/latest/installation/) of SLEAP yourself but I will provide a step by step on how to get SLEAPyTracks running on a basic Windows computer without a Nvidia GPU.
 
-The following instructions are for Windows.
+SLEAPyTracks uses the SLEAP library. So first we install SLEAP using miniconda.
 
 ### Install Miniconda ###
 
@@ -26,7 +27,7 @@ Anaconda is a Python environment manager that makes it easy to install SLEAP and
 
 Miniconda is a lightweight version of Anaconda. To install it:
 
-Go to: https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links
+Go to: https://www.anaconda.com/docs/getting-started/miniconda/install#quickstart-install-instructions
 
 Download the latest version for your OS.
 
@@ -36,29 +37,39 @@ Follow the installer instructions.
 
 ### Install SLEAP ###
 
-open "Anaconda Powershell Prompt" from the start menu.
+Open "Anaconda Powershell Prompt" from the start menu.
 
 First we install SLEAP.
 
 Copy the following line in the Anaconda powershell and press enter:
 
 ```bash
-conda create -y -n sleap -c sleap -c nvidia -c conda-forge sleap=1.3.0
+conda create -n sleap-nn-env python=3.13
 ```
 
-Wait until the installation is finished.
+Activate the enviroment:
 
-After installing SLEAP install ffmpeg by coping the following line into the shell and pressing enter:
+```bash
+conda activate sleap-nn-env
+```
+
+Install FFMPEG:
 
 ```bash
 conda install -n sleap ffmpeg
 ```
 
-
-If you don't have git installed already, you can also install it with Miniconda:
+Install SLEAP:
 
 ```bash
-conda install git
+pip install sleap-nn[torch] --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cpu
+```
+
+Wait until the installation is finished.
+
+Test the installation:
+```bash
+sleap-nn --help
 ```
 
 
@@ -66,7 +77,7 @@ conda install git
 
 Clone the SLEAPyTracks repo from GitHub.
 
-in the Anaconda powershell:
+In the Anaconda powershell:
 
 ```bash
 git clone https://github.com/aavanderleij/SLEAPyTracks.git
@@ -78,14 +89,14 @@ To update SLEAPyTracks, you can run the following git command:
 git pull
 ```
 
-Remember to save any tracking files you want to keep somewhere else.
+Remember to save any model files you want to keep somewhere else.
 
 ## Usage ##
 
 With the Anaconda powershell start the sleap virtual environment.
 
 ```bash
-conda activate sleap
+conda activate sleap-nn-env
 ```
 
 Using the the Anaconda powershell go into the map for SLEAPyTracks (the location of this readme).
@@ -107,23 +118,16 @@ Files are saved as csv and .slp with the name of the video.
 
 ### more options: ###
 
-Automatically fix video index errors.
+Automatically fix video index errors. (with the new version this option might not be needed anymore but that needs more testing)
 
 ```bash
 python SLEAPyTracks "path/to/your/video_dir/location/" -f
 ```
 
-direct output to different directory
+Re-analyse videos. By default SLEAPyTracks will skip videos that already have a slp file with the same name, only running the model on "new" videos
 
 ```bash
-python SLEAPyTracks "path/to/your/video_dir/location/" -o "path/to/output"
-```
-
-
-track more than one animal in a video (e.g 3 animals):
-
-```bash
-python SLEAPyTracks "path/to/your/video_dir/location/" -t -n 3
+python SLEAPyTracks "path/to/your/video_dir/location/" -r
 ```
 
 ## FAQ ## 
@@ -133,6 +137,20 @@ python SLEAPyTracks "path/to/your/video_dir/location/" -t -n 3
 
 #### SLEAPyTracks skips some of my videos? It said there was an error?
 * This is likely an index error while trying to read the video. Adding -f option will cause the program to copy and re-index you video's.
+
+#### How do I check if my tracks are correct?
+* By loading a SLP file into SLEAP. I recommend the [system-wide instalation with UV](https://nn.sleap.ai/latest/installation/#installation-as-a-system-wide-tool-with-uv). Launch the SLEAP GUI by typing "sleap-label" in your terminal. The application will start and in the upper left corner of the screen select "file" and then press "Open Project..."
+
+#### I have empty CSV files....
+* That means the model did not find any instaces in the video.
+
+#### But I know there is a bird there!
+* If the current model does not work for your Red Knot exploration test, please contact me so I can add it as training data for the next model. If you are in a hurry, you can train your own model. Tutorials can be found [here](https://docs.sleap.ai/latest/tutorial/overview/).
+
+#### SLEAPyTracks does not work...
+* If you encounter any problems/bugs using this library, please let me know so I can fix/improve you experience.
+
+
 ## References ##
 
 ### SLEAP ###
