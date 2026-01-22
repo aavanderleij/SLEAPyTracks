@@ -1,53 +1,49 @@
 #!/usr/bin/env python
 
-
 import argparse
+from logging_config import setup_logging, get_logger
+
+logger = None
 
 parser = argparse.ArgumentParser(
     prog='SLEAPyTracks',
-    description='A tracker for tracking exploration behavior. Currently trained for use on red knot exploration tests.',
-    epilog='Still a work in progress!')
-parser.add_argument('video_dir', help='path to the directory containing the videos to be tracked', type=str)
-parser.add_argument('-o', '--output_dir', help='path to the directory to store the csv output files',
-                    default='', type=str)
-parser.add_argument('-n', '--number_of_animals', help='the maximum number of animals that are visible in one video',
-                    type=int,
-                    default=1)
-parser.add_argument('-t', '--tracking', action='store_true', help='use tracking functionality (not trained properly '
-                                                                  'yet!)')
-parser.add_argument("-f", "--fix_videos", action="store_true", help="attempt to re-index if videos can't be"
-                                                                    "read. Will duplicate video videos that produce "
-                                                                    "errors!")
+    description='A tracker for tracking exploration behavior. Trained for use on red knot exploration tests.')
+parser.add_argument('video_dir', help='path to the directory containing the videos to be tracked',
+                    type=str)
+parser.add_argument("-f", "--fix_videos", action="store_true",
+                    help="Attempt to re-index if videos can't be read. " \
+                    "Will duplicate video videos that produce errors!")
+parser.add_argument("-r", "--overwrite", action="store_true",
+                    help="re-analyze videos and overwrite results if they exist.")
 
 if __name__ == "__main__":
-    args = parser.parse_args()
-    print("Starting SLEAPyTracks...")
 
-    from SLEAP_parser import SleapParser
-    from SLEAP_model import SLEAPModel
+    args = parser.parse_args()
+    # Initialize logging
+    logger = setup_logging(log_dir=args.video_dir)
+    main_logger = get_logger(__name__)
+    
+
+    main_logger.info("Starting SLEAPyTracks...")
+
+    from video_batch_perdictor import Predictor
 
     # fixing videos can lead to problems
     if args.fix_videos:
-        print("Warning: The '--fix_videos' option is enabled.")
-        print(
-            "This will leave the original videos as they are. However, if a videos produces an error, the video(s) "
-            "will be copied and re-indexed. This can easily fill up your storage as every video will potentiality be "
-            "duplicated! Please check your storage before proceeding.")
-        print("please check the SLEAP faq for more info.")
+        main_logger.warning("The '--fix_videos' option is enabled.")
 
-        confirm = input("Do you want to continue? (y/n): ").strip().lower()
+        print("The '--fix_videos' option is enabled.")
 
-        if confirm not in ['yes', 'y']:
-            print("Operation aborted by the user.")
-            exit(0)
+        print("This will leave the original videos as they are. "
+        "However, if a videos produces an error, the video(s) "
+        "will be copied and re-indexed. This can easily fill up your storage as every video "
+        "will potentiality be duplicated! Please check your storage before proceeding.")
+        print("Please check the SLEAPyTracks faq for more info.")
+    
+    if args.overwrite:
+        main_logger.warning("The '--overwrite' option is enabled.")
 
-    if args.output_dir == '':
-        model = SLEAPModel(args.video_dir, predictions_out_dir=args.video_dir)
-        model.predict(args.number_of_animals, args.tracking, args.fix_videos)
-        SleapParser().get_results(args.video_dir)
-    else:
-        model = SLEAPModel(args.video_dir, predictions_out_dir=args.output_dir)
-        model.predict(args.number_of_animals, args.tracking, args.fix_videos)
-        SleapParser().get_results(args.output_dir)
+    predictor = Predictor(args.video_dir)
+    labels = predictor.predict(fix_videos=args.fix_videos, overwrite=args.overwrite)
 
-    print('all done!')
+    main_logger.info("All done!")
