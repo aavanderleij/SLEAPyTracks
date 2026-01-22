@@ -56,7 +56,7 @@ conda activate sleap-nn-env
 Install FFMPEG:
 
 ```bash
-conda install -n sleap ffmpeg
+conda install -n sleap-nn-env ffmpeg
 ```
 
 Install SLEAP:
