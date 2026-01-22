@@ -48,7 +48,7 @@ class SLEAPModel:
             data_path=video,
             model_paths=glob.glob('model/*'),
             make_labels=True,
-            frames=list(range(20,30,1)),
+            # frames=list(range(20,30,1)),
             return_confmaps=True,
             output_path=output_path)
 
