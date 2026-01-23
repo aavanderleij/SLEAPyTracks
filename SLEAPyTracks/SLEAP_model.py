@@ -48,7 +48,7 @@ class SLEAPModel:
             data_path=video,
             model_paths=glob.glob('model/*'),
             make_labels=True,
-            # frames=list(range(20,30,1)),
+            frames=list(range(20,70,1)),
             return_confmaps=True,
             output_path=output_path)
 
@@ -76,10 +76,6 @@ def main():
     from logging_config import setup_logging
     setup_logging()
     logger.info("Starting SLEAP_model test")
-
-    model = SLEAPModel(video_file_path=r"C:\Users\avanderleij\OneDrive - NIOZ\Bureaublad\Explortation_Test_sleap\fixed_videos\fixed_F01_2018-09-12_Z058243.MP4")
-
-    model.predict(video=r"C:\Users\avanderleij\OneDrive - NIOZ\Bureaublad\Explortation_Test_sleap\2018-09-12\F01_2018-09-12_Z058243.MP4")
 
 if __name__ == "__main__":
     sys.exit(main())
