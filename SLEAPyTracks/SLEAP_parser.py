@@ -5,7 +5,8 @@ extracts information from slp files such as node coordinates.
 import os
 import sys
 
-import numpy
+import numpy as np
+from PIL import Image
 import pandas
 import sleap_io
 from logging_config import get_logger
@@ -19,7 +20,7 @@ class SleapParser:
     """
 
     def __init__(self, slp_file):
-        self.slp_file = slp_file
+        self.labels = self.load_labels(slp_file)
 
     def create_dataframe(self, node_names):
         """
@@ -40,35 +41,45 @@ class SleapParser:
             name_y = name + "_y"
             sleap_video_datatypes.append((name_x, int))
             sleap_video_datatypes.append((name_y, int))
-        data_types = numpy.dtype(sleap_video_datatypes)
+        data_types = np.dtype(sleap_video_datatypes)
         # make empty pandas data frame
-        data_frame = pandas.DataFrame(numpy.empty(0, dtype=data_types))
+        data_frame = pandas.DataFrame(np.empty(0, dtype=data_types))
         return data_frame
+
+    def load_labels(self, filename):
+        logger.info(f"Loading SLEAP file: {filename}")
+        # load SLEAP (.slp) file
+        labels = sleap_io.load_file(filename)
+        # set labels
+
+        return labels
+
 
     def sleap_to_csv(self, filename):
         """
         Loads data from a .slp file (sleap) into a pandas data frame and saves it as a csv
         """
-        logger.info(f"Loading SLEAP file: {filename}")
-        # load SLEAP (.slp) file
-        labels = sleap_io.load_file(filename)
         # get video name for dataframe csv
-        file_path = labels.video.backend.filename
+        file_path = self.labels.video.backend.filename
         video_name = os.path.splitext(os.path.basename(filename))[0]
         # get node names from skeleton
-        node_names = labels.skeleton.node_names
+        node_names = self.labels.skeleton.node_names
 
         # get video shape
-        (video_frame_count, video_height, video_width, c) = labels.video.shape
+        (video_frame_count, video_height, video_width, c) = self.labels.video.shape
+        n_labeled_frames = len(self.labels.labeled_frames)
         logger.debug(f"frame count video: {video_frame_count}")
+        logger.debug(f"{n_labeled_frames} of video frames have labels")
+        logger.info(f"{100 * n_labeled_frames / video_frame_count:.2f}% of frames are labeled")
+
         # get frames per second
-        fps = getattr(labels.video.backend, "fps", None)
+        fps = getattr(self.labels.video.backend, "fps", None)
 
         # make empty data frame
         data_frame = self.create_dataframe(node_names)
 
         logger.info(f"Converting {video_name}.slp to CSV...")
-        for frame in labels.labeled_frames:
+        for frame in self.labels.labeled_frames:
             frame_id = frame.frame_idx
 
             for count, instance in enumerate(frame.predicted_instances):
@@ -106,13 +117,35 @@ class SleapParser:
         logger.info(f"CSV file saved to: {csv_path}")
 
 
+    def render_image(self):
+        # n_label_frames = len(self.labels.labeled_frames)
+        # if n_label_frames == 0:
+        #     return []
+
+        # # Get 4 evenly spaced indices frames
+        # frame_indices = np.linspace(0, n_label_frames - 1, num=4, dtype=int)
+
+        # frames = []
+        # for i in frame_indices:
+        #     img = sleap_io.render_image(self.labels.labeled_frames[int(i)], color_by="instance",)
+        #     frames.append(img)
+
+        # montage = np.concatenate(frames, axis=1)
+        # montage = Image.fromarray(montage)
+        # montage.show()
+        sleap_io.render_video(self.labels, "output.mp4")
+        return 0
+
+    def parse_results(self, file_name):
+
+        self.sleap_to_csv(filename=file_name)
+        self.render_image()
+
+
 def main():
     from logging_config import setup_logging
     setup_logging()
     logger.info("Starting SLEAP_parser test")
-    sp = SleapParser(r"C:\Users\avanderleij\OneDrive - NIOZ\Bureaublad\Explortation_Test_sleap\2018-09-12\F02_2018-09-18_Z083970.slp")
-    sp.sleap_to_csv(r"C:\Users\avanderleij\OneDrive - NIOZ\Bureaublad\Explortation_Test_sleap\2018-09-12\F02_2018-09-18_Z083970.slp")
-
 
 if __name__ == "__main__":
     sys.exit(main())
