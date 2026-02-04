@@ -13,7 +13,8 @@ With the update of SLEAP version 1.5.0, major changes were made to the framework
 Main functionality: 
 * SLEAPyTracks will search input directory (and all subdirectories) for videos and analyze all found mp4 files.
 * CSV files and SLP files are saved in the location of the video.
-* Custom CVS output will contain the pixel coordinates and scores of every tracked instance.
+* Generates a montage to preview tracking results.
+* Custom CVS output will contain the pixel coordinates and scores of every instance.
 
 ## Installation ##
 
@@ -47,7 +48,7 @@ Copy the following line in the Anaconda powershell and press enter:
 conda create -n sleap-nn-env python=3.13
 ```
 
-Activate the enviroment:
+Activate the environment:
 
 ```bash
 conda activate sleap-nn-env
@@ -62,7 +63,7 @@ conda install -n sleap-nn-env ffmpeg
 Install SLEAP:
 
 ```bash
-pip install sleap-nn[torch] --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cpu
+pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
 ```
 
 Wait until the installation is finished.
@@ -116,7 +117,7 @@ The output can be found in the same directory as the video.
 Files are saved as csv and .slp with the name of the video.
 
 
-### more options: ###
+### More options: ###
 
 Automatically fix video index errors. (with the new version this option might not be needed anymore but that needs more testing)
 
@@ -124,10 +125,16 @@ Automatically fix video index errors. (with the new version this option might no
 python SLEAPyTracks "path/to/your/video_dir/location/" -f
 ```
 
-Re-analyse videos. By default SLEAPyTracks will skip videos that already have a slp file with the same name, only running the model on "new" videos
+Re-analyze videos. By default SLEAPyTracks will skip videos that already have a slp file with the same name, only running the model on "new" videos
 
 ```bash
 python SLEAPyTracks "path/to/your/video_dir/location/" -r
+```
+
+Create a separate videos with the tracks overlaid over the original video. These will be save in there own folder: "tracked_videos"
+
+```bash
+python SLEAPyTracks "path/to/your/video_dir/location/" -t
 ```
 
 ## FAQ ## 
@@ -139,10 +146,10 @@ python SLEAPyTracks "path/to/your/video_dir/location/" -r
 * This is likely an index error while trying to read the video. Adding -f option will cause the program to copy and re-index you video's.
 
 #### How do I check if my tracks are correct?
-* By loading a SLP file into SLEAP. I recommend the [system-wide instalation with UV](https://nn.sleap.ai/latest/installation/#installation-as-a-system-wide-tool-with-uv). Launch the SLEAP GUI by typing "sleap-label" in your terminal. The application will start and in the upper left corner of the screen select "file" and then press "Open Project..."
+* By loading a SLP file into SLEAP. I recommend the [system-wide installation with UV](https://nn.sleap.ai/latest/installation/#installation-as-a-system-wide-tool-with-uv). Launch the SLEAP GUI by typing "sleap-label" in your terminal. The application will start and in the upper left corner of the screen select "file" and then press "Open Project..."
 
 #### I have empty CSV files....
-* That means the model did not find any instaces in the video.
+* That means the model did not find any instances in the video.
 
 #### But I know there is a bird there!
 * If the current model does not work for your Red Knot exploration test, please contact me so I can add it as training data for the next model. If you are in a hurry, you can train your own model. Tutorials can be found [here](https://docs.sleap.ai/latest/tutorial/overview/).
