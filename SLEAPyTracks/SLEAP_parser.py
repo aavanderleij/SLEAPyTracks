@@ -20,6 +20,7 @@ class SleapParser:
     """
 
     def __init__(self, slp_file):
+        self.slp_file = slp_file
         self.labels = self.load_labels(slp_file)
 
     def create_dataframe(self, node_names):
@@ -89,7 +90,7 @@ class SleapParser:
                 new_row = {"video": file_path, "frame_idx": frame_id, "instance_id": count,
                            "instance_score": score, "video_height": video_height,
                            "video_width": video_width, "fps": fps}
-                
+
                 for point in node_points:
                     # get name of node
                     node_name = point[4]
@@ -117,23 +118,56 @@ class SleapParser:
         logger.info(f"CSV file saved to: {csv_path}")
 
 
-    def render_image(self):
-        # n_label_frames = len(self.labels.labeled_frames)
-        # if n_label_frames == 0:
-        #     return []
+    def render_image(self, render_video=True):
+        """
+        Render an image or video with the points detected by the model
+        
+        :param self: Description
+        """
+        slp_file_no_extension = os.path.splitext(self.slp_file)[0]
+        slp_dir_name = os.path.dirname(self.slp_file)
 
-        # # Get 4 evenly spaced indices frames
-        # frame_indices = np.linspace(0, n_label_frames - 1, num=4, dtype=int)
+        # If no frames, return empty list
+        n_label_frames = len(self.labels.labeled_frames)
+        if n_label_frames == 0:
+            return []
 
-        # frames = []
-        # for i in frame_indices:
-        #     img = sleap_io.render_image(self.labels.labeled_frames[int(i)], color_by="instance",)
-        #     frames.append(img)
+        # Get 4 evenly spaced frames
+        frame_indices = np.linspace(0, n_label_frames - 2, num=4, dtype=int)
 
-        # montage = np.concatenate(frames, axis=1)
-        # montage = Image.fromarray(montage)
-        # montage.show()
-        sleap_io.render_video(self.labels, "output.mp4")
+        # render image for every frame
+        frames = []
+        for i in frame_indices:
+            img = sleap_io.render_image(self.labels.labeled_frames[int(i)], color_by="instance",)
+            frames.append(img)
+
+        # concatenate for a montage
+        montage = np.concatenate(frames, axis=1)
+        m_img = Image.fromarray(montage)
+
+        # save in the same folder as slp file
+        m_img.save(f"{slp_file_no_extension}.png")
+
+        if render_video:
+
+            # Ensure the tracked_videos directory exists
+            render_root = os.path.join(slp_dir_name, "tracked_videos")
+            os.makedirs(render_root, exist_ok=True)
+
+            # Build the output .mp4 path from the SLP filename (without its extension)
+            base_name = os.path.splitext(os.path.basename(self.slp_file))[0]
+            rendered_vid_path = os.path.join(render_root, base_name + ".MP4")
+
+            try:
+                sleap_io.render_video(self.labels, rendered_vid_path)
+            except ValueError as e:
+                logger.error(e)
+                logger.info("Will now try rendering video with solid background color.")
+                try:
+                    sleap_io.render_video(self.labels, rendered_vid_path, background="black")
+                except MemoryError as me:
+                    logger.error(me)
+                    logger.info("Unable to render video. Continuing.")
         return 0
 
     def parse_results(self, file_name):
@@ -146,6 +180,5 @@ def main():
     from logging_config import setup_logging
     setup_logging()
     logger.info("Starting SLEAP_parser test")
-
 if __name__ == "__main__":
     sys.exit(main())
