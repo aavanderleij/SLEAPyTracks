@@ -10,11 +10,14 @@ parser = argparse.ArgumentParser(
     description='A tracker for tracking exploration behavior. Trained for use on red knot exploration tests.')
 parser.add_argument('video_dir', help='path to the directory containing the videos to be tracked',
                     type=str)
-parser.add_argument("-f", "--fix_videos", action="store_true",
+parser.add_argument("-f", "--re_index", action="store_true",
                     help="Attempt to re-index if videos can't be read. " \
                     "Will duplicate video videos that produce errors!")
 parser.add_argument("-r", "--overwrite", action="store_true",
                     help="re-analyze videos and overwrite results if they exist.")
+parser.add_argument("-t", "--render_tracks", action="store_true", help="Render video's with tracking overlay.")
+
+
 
 if __name__ == "__main__":
 
@@ -29,10 +32,10 @@ if __name__ == "__main__":
     from video_batch_perdictor import Predictor
 
     # fixing videos can lead to problems
-    if args.fix_videos:
-        main_logger.warning("The '--fix_videos' option is enabled.")
+    if args.re_index:
+        main_logger.warning("The '--re_index' option is enabled.")
 
-        print("The '--fix_videos' option is enabled.")
+        print("The '--re_index' option is enabled.")
 
         print("This will leave the original videos as they are. "
         "However, if a videos produces an error, the video(s) "
@@ -43,7 +46,7 @@ if __name__ == "__main__":
     if args.overwrite:
         main_logger.warning("The '--overwrite' option is enabled.")
 
-    predictor = Predictor(args.video_dir)
-    labels = predictor.predict(fix_videos=args.fix_videos, overwrite=args.overwrite)
+    predictor = Predictor(args.video_dir, re_index=args.re_index, render_tracks=args.render_tracks )
+    labels = predictor.predict(overwrite=args.overwrite)
 
     main_logger.info("All done!")
