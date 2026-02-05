@@ -40,24 +40,26 @@ Follow the installer instructions.
 
 Open "Anaconda Powershell Prompt" from the start menu.
 
+Check if you have the latest version of conda.
+
+If not, you can update conda by entering the following:
+
+```bash
+conda update --name base conda
+```
+
 First we install SLEAP.
 
 Copy the following line in the Anaconda powershell and press enter:
 
 ```bash
-conda create -n sleap-nn-env python=3.13
+conda create -n sleap python=3.13
 ```
 
 Activate the environment:
 
 ```bash
-conda activate sleap-nn-env
-```
-
-Install FFMPEG:
-
-```bash
-conda install -n sleap-nn-env ffmpeg
+conda activate sleap
 ```
 
 Install SLEAP:
@@ -69,8 +71,9 @@ pip install "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cpu -
 Wait until the installation is finished.
 
 Test the installation:
+
 ```bash
-sleap-nn --help
+sleap-label --help
 ```
 
 
@@ -97,7 +100,7 @@ Remember to save any model files you want to keep somewhere else.
 With the Anaconda powershell start the sleap virtual environment.
 
 ```bash
-conda activate sleap-nn-env
+conda activate sleap
 ```
 
 Using the the Anaconda powershell go into the map for SLEAPyTracks (the location of this readme).
@@ -139,6 +142,9 @@ python SLEAPyTracks "path/to/your/video_dir/location/" -t
 
 ## FAQ ## 
 
+#### When testing the installation of SLEAP I get errors.
+* Remove the environment, update conda and reinstall. This is an known issue being worked on but a clean reinstall should fix most issus. Please contact me if the issue persists.
+
 #### Videos take a long time to analyze. Can I make it go faster?
 * Running it on a pc with a Nvidia GPU or a High Preformance Culster will greatly increase speed.
 
@@ -146,7 +152,7 @@ python SLEAPyTracks "path/to/your/video_dir/location/" -t
 * This is likely an index error while trying to read the video. Adding -f option will cause the program to copy and re-index you video's.
 
 #### How do I check if my tracks are correct?
-* By loading a SLP file into SLEAP. I recommend the [system-wide installation with UV](https://nn.sleap.ai/latest/installation/#installation-as-a-system-wide-tool-with-uv). Launch the SLEAP GUI by typing "sleap-label" in your terminal. The application will start and in the upper left corner of the screen select "file" and then press "Open Project..."
+* SLEAPyTracks will generate an image containing 4 frames evenly spaced in the video with tracks overlaid. This way you can see if the subject was identified. You can also use the -t flag to generate videos overlaing the tracks so you can easely see how the model behaved. for a closer look you can view the SLP file by loading it into the SLEAP gui. You can activate sleap in the same env as SLEAPyTracks and typing "sleap-label". The application will start and in the upper left corner of the screen select "file" and then press "Open Project..." to select your slp file
 
 #### I have empty CSV files....
 * That means the model did not find any instances in the video.
