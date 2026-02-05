@@ -1,6 +1,6 @@
 
 # README SLEAPyTracks #
-* Version 1.0.0
+* Version 1.0.2
 
 
 ## What is this repository for? ##
@@ -146,13 +146,13 @@ python SLEAPyTracks "path/to/your/video_dir/location/" -t
 * Remove the environment, update conda and reinstall. This is an known issue being worked on but a clean reinstall should fix most issus. Please contact me if the issue persists.
 
 #### Videos take a long time to analyze. Can I make it go faster?
-* Running it on a pc with a Nvidia GPU or a High Preformance Culster will greatly increase speed.
+* Running it on a pc with a Nvidia GPU or a High Performance Cluster will greatly increase speed.
 
 #### SLEAPyTracks skips some of my videos? It said there was an error?
 * This is likely an index error while trying to read the video. Adding -f option will cause the program to copy and re-index you video's.
 
 #### How do I check if my tracks are correct?
-* SLEAPyTracks will generate an image containing 4 frames evenly spaced in the video with tracks overlaid. This way you can see if the subject was identified. You can also use the -t flag to generate videos overlaing the tracks so you can easely see how the model behaved. for a closer look you can view the SLP file by loading it into the SLEAP gui. You can activate sleap in the same env as SLEAPyTracks and typing "sleap-label". The application will start and in the upper left corner of the screen select "file" and then press "Open Project..." to select your slp file
+* SLEAPyTracks will generate an image containing 4 frames evenly spaced in the video with tracks overlaid. This way you can see if the subject was identified. You can also use the -t flag to generate videos overlaying the tracks so you can easily see how the model behaved. for a closer look you can view the SLP file by loading it into the SLEAP gui. You can activate sleap in the same env as SLEAPyTracks and typing "sleap-label". The application will start and in the upper left corner of the screen select "file" and then press "Open Project..." to select your slp file
 
 #### I have empty CSV files....
 * That means the model did not find any instances in the video.
