@@ -48,7 +48,7 @@ If not, you can update conda by entering the following:
 conda update --name base conda
 ```
 
-First we install SLEAP.
+First we create an new conda environment with python 3.13.
 
 Copy the following line in the Anaconda powershell and press enter:
 
@@ -119,6 +119,32 @@ The output can be found in the same directory as the video.
 
 Files are saved as csv and .slp with the name of the video.
 
+## Output ##
+
+For every video SLEAPyTracks processes, it writes four types of output, all named after the source video and saved next to it (or in a clearly named subfolder), so results stay traceable back to their source.
+
+| File | Location | Description |
+|---|---|---|
+| `<video_name>.slp` | Same folder as the video | Raw SLEAP prediction file. Contains every predicted instance, node, and score for the video. Can be opened and inspected in the SLEAP GUI (`sleap-label`). |
+| `<video_name>.csv` | Same folder as the video | CSV file parsed from the `.slp` file. One row per detected instance per frame. See column description below. |
+| `<video_name>.png` | Same folder as the video | A montage of 4 evenly-spaced frames from the video with detected tracks overlaid, for a quick visual check of tracking quality. |
+| `tracked_videos/<video_name>.MP4` | `tracked_videos/` subfolder (only with `-t` flag) | The original video re-rendered with tracks overlaid on every frame. |
+
+### CSV columns ###
+
+The CSV is the main output for downstream analysis. It uses plain, self-describing column headers so it can be opened and used without needing SLEAPyTracks or SLEAP itself (interoperable and reusable):
+
+* `video` — path to the source video file.
+* `frame_idx` — frame number the row corresponds to.
+* `fps` — frame rate of the video (use with `frame_idx` to get a timestamp).
+* `video_height`, `video_width` — video resolution in pixels.
+* `instance_id` — number identifying which detected animal/instance the row belongs to (relevant if multiple animals are tracked in the same video).
+* `instance_score` — SLEAP's confidence score for the instance as a whole.
+* `<node>_x`, `<node>_y` — pixel coordinates of each tracked body part ("node"), e.g. `neck_base_x`, `neck_base_y`. Node names come from the skeleton used in the model.
+* `<node>_score` — SLEAP's confidence score for each individual node coordinate.
+
+A frame with no detected instance for a given frame does not appear in the CSV, so frame numbers are not always consecutive.
+
 
 ### More options: ###
 
@@ -148,17 +174,17 @@ python SLEAPyTracks "path/to/your/video_dir/location/" -t
 #### Videos take a long time to analyze. Can I make it go faster?
 * Running it on a pc with a Nvidia GPU or a High Performance Cluster will greatly increase speed.
 
-#### SLEAPyTracks skips some of my videos? It said there was an error?
-* This is likely an index error while trying to read the video. Adding -f option will cause the program to copy and re-index you video's.
-
 #### How do I check if my tracks are correct?
-* SLEAPyTracks will generate an image containing 4 frames evenly spaced in the video with tracks overlaid. This way you can see if the subject was identified. You can also use the -t flag to generate videos overlaying the tracks so you can easily see how the model behaved. for a closer look you can view the SLP file by loading it into the SLEAP gui. You can activate sleap in the same env as SLEAPyTracks and typing "sleap-label". The application will start and in the upper left corner of the screen select "file" and then press "Open Project..." to select your slp file
+* SLEAPyTracks will generate an image containing 4 frames evenly spaced in the video with tracks overlaid. This way you can see if the subject was identified. You can also use the -t flag to generate videos overlaying the tracks so you can easily see how the model behaved. For a closer look you can view the SLP file by loading it into the SLEAP gui. You can activate sleap in the same env as SLEAPyTracks and typing "sleap-label". The application will start and in the upper left corner of the screen select "file" and then press "Open Project..." to select the slp file you want to inspect.
 
 #### I have empty CSV files....
 * That means the model did not find any instances in the video.
 
 #### But I know there is a bird there!
 * If the current model does not work for your Red Knot exploration test, please contact me so I can add it as training data for the next model. If you are in a hurry, you can train your own model. Tutorials can be found [here](https://docs.sleap.ai/latest/tutorial/overview/).
+
+#### SLEAPyTracks skips some of my videos? It said there was an error?
+* This is likely an index error while trying to read the video. Adding -f option will make the program to copy and re-index you video's. This wil fix most errors. With the 1.5.0 update of SLEAP these issues have become a lot more rare.
 
 #### SLEAPyTracks does not work...
 * If you encounter any problems/bugs using this library, please let me know so I can fix/improve you experience.
