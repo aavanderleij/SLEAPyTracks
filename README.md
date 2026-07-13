@@ -93,7 +93,7 @@ To update SLEAPyTracks, you can run the following git command:
 git pull
 ```
 
-Remember to save any model files you want to keep somewhere else.
+Remember to save any custom model files you want to keep somewhere else, files in the model file will be overwritten.
 
 ## Usage ##
 
