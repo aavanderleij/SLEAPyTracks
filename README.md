@@ -1,6 +1,6 @@
 
 # README SLEAPyTracks #
-* Version 1.0.2
+* Version 1.0.3
 
 
 ## What is this repository for? ##
@@ -8,7 +8,7 @@
 This is a tracker for tracking exploration behavior of the red knot. Currently trained for use on red knot exploration tests.
 Runs a trained SLEAP model over multiple videos and returns tracking data as CSV files.
 
-With the update of SLEAP version 1.5.0, major changes were made to the framework.
+With the update of SLEAP version 1.5.0, major changes were made to the framework. This current version is compatible with SLEAP 1.6.3.
 
 Main functionality: 
 * SLEAPyTracks will search input directory (and all subdirectories) for videos and analyze all found mp4 files.
@@ -121,14 +121,14 @@ Files are saved as csv and .slp with the name of the video.
 
 ## Output ##
 
-For every video SLEAPyTracks processes, it writes four types of output, all named after the source video and saved next to it (or in a clearly named subfolder), so results stay traceable back to their source.
+By default every video SLEAPyTracks processes, 3 files are created as output. All named after the source video and saved next to it. If the `-t` option is selected, those vidoes will be saved in a clearly named subfolder. Results stay traceable back to their source.
 
 | File | Location | Description |
 |---|---|---|
 | `<video_name>.slp` | Same folder as the video | Raw SLEAP prediction file. Contains every predicted instance, node, and score for the video. Can be opened and inspected in the SLEAP GUI (`sleap-label`). |
 | `<video_name>.csv` | Same folder as the video | CSV file parsed from the `.slp` file. One row per detected instance per frame. See column description below. |
 | `<video_name>.png` | Same folder as the video | A montage of 4 evenly-spaced frames from the video with detected tracks overlaid, for a quick visual check of tracking quality. |
-| `tracked_videos/<video_name>.MP4` | `tracked_videos/` subfolder (only with `-t` flag) | The original video re-rendered with tracks overlaid on every frame. |
+| `tracked_videos/<video_name>.MP4` | `tracked_videos/` subfolder (only with `-t` flag) | The video rendered with tracks overlaid on every frame. |
 
 ### CSV columns ###
 
