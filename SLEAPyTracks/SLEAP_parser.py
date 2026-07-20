@@ -59,6 +59,8 @@ class SleapParser:
     def sleap_to_csv(self, filename):
         """
         Loads data from a .slp file (sleap) into a pandas data frame and saves it as a csv
+
+        :return: tuple of (total_frames, percent_labeled_frames)
         """
         # get video name for dataframe csv
         file_path = self.labels.video.backend.filename
@@ -69,9 +71,10 @@ class SleapParser:
         # get video shape
         (video_frame_count, video_height, video_width, c) = self.labels.video.shape
         n_labeled_frames = len(self.labels.labeled_frames)
+        percent_labeled_frames = 100 * n_labeled_frames / video_frame_count
         logger.debug(f"frame count video: {video_frame_count}")
         logger.debug(f"{n_labeled_frames} of video frames have labels")
-        logger.info(f"{100 * n_labeled_frames / video_frame_count:.2f}% of frames are labeled")
+        logger.info(f"{percent_labeled_frames:.2f}% of frames are labeled")
 
         # get frames per second
         fps = getattr(self.labels.video.backend, "fps", None)
@@ -116,6 +119,8 @@ class SleapParser:
         csv_path = os.path.join(os.path.dirname(filename), f"{video_name}.csv")
         data_frame.to_csv(csv_path, index=False)
         logger.info(f"CSV file saved to: {csv_path}")
+
+        return video_frame_count, percent_labeled_frames
 
 
     def render_image(self, render_video=True):

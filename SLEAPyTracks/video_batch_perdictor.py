@@ -9,6 +9,7 @@ import subprocess
 from logging_config import get_logger
 from SLEAP_model import SLEAPModel
 from SLEAP_parser import SleapParser
+from processing_log import ProcessingLog
 
 logger = get_logger(__name__)
 
@@ -57,6 +58,13 @@ class Predictor():
 
         videos = self.find_videos_in_sub_dir()
         logger.info(f"Predicting on {len(videos)} video(s)")
+
+        # register all found videos in the processing log (status "Unprocessed")
+        # before doing any work, so first_seen is filled up front
+        processing_log = ProcessingLog(self.root_video_dir)
+        for video in videos:
+            processing_log.register_video(video)
+        processing_log.save()
 
         for i, video in enumerate(videos):
 
@@ -114,18 +122,25 @@ class Predictor():
                         except KeyError:
                             logger.error("Unable to fix video")
                             logger.info("Continuing with next video (if there are any)")
+                            processing_log.mark_error(
+                                video, "Unable to fix video (KeyError while indexing)")
                             continue
                     else:
                         logger.error(f"Error while indexing video: {video_name}")
                         logger.warning("Please check the SLEAP faq for more info.")
                         logger.info("Continuing with next video (if there are any)...")
+                        processing_log.mark_error(video, "KeyError while indexing video")
                         continue
 
             if os.path.isfile(slp_file_name):
-                # TODO discuss if this is how we want it
-                sleap_parser = SleapParser(slp_file=slp_file_name)
-                sleap_parser.sleap_to_csv(slp_file_name)
-                sleap_parser.render_image(render_video=self.render_tracks)
+                try:
+                    sleap_parser = SleapParser(slp_file=slp_file_name)
+                    total_frames, percent_labeled_frames = sleap_parser.sleap_to_csv(slp_file_name)
+                    sleap_parser.render_image(render_video=self.render_tracks)
+                    processing_log.mark_finished(video, total_frames, percent_labeled_frames)
+                except Exception as error:
+                    logger.error(f"Error while parsing results for {video_name}: {error}")
+                    processing_log.mark_error(video, error)
 
             logger.info(f"Done with {i + 1} of {len(videos)} video(s)")
 
