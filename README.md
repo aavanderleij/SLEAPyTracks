@@ -121,7 +121,7 @@ Files are saved as csv and .slp with the name of the video.
 
 ## Output ##
 
-By default every video SLEAPyTracks processes, 3 files are created as output. All named after the source video and saved next to it. If the `-t` option is selected, those vidoes will be saved in a clearly named subfolder. Results stay traceable back to their source.
+By default every video SLEAPyTracks processes, 3 files are created as output. All named after the source video and saved next to it. If the `-t` option is selected, those vidoes will be saved in a clearly named subfolder. Results stay traceable back to their source. 
 
 | File | Location | Description |
 |---|---|---|
@@ -130,9 +130,32 @@ By default every video SLEAPyTracks processes, 3 files are created as output. Al
 | `<video_name>.png` | Same folder as the video | A montage of 4 evenly-spaced frames from the video with detected tracks overlaid, for a quick visual check of tracking quality. |
 | `tracked_videos/<video_name>.MP4` | `tracked_videos/` subfolder (only with `-t` flag) | The video rendered with tracks overlaid on every frame. |
 
+### Run-level files ###
+
+In addition to the per-video files above, SLEAPyTracks writes two files once per run in the root of the input directory you point it at (the directory given on the command line). These track the run as a whole rather than a single video.
+
+| File | Location | Description |
+|---|---|---|
+| `SLEAPyTracks_<timestamp>.log` | Root of the input directory | Full run log. Everything SLEAPyTracks reports while running (info, warnings and errors) is written here, with a timestamp on every line. A new file is created for each run, named after the date and time the run started. Useful for checking what happened or reporting a problem. |
+| `SLEAPyTracks_processing_log.json` | Root of the input directory | Persistent record of every video SLEAPyTracks has seen in this directory and how far it got. Updated as the run progresses and kept between runs, so it builds up a history. See the fields below. |
+
+The processing log is a JSON file. Every video is registered with status `Unprocessed` as soon as it is found (before any prediction runs) and then updated to `finished` or `error`. Each entry holds:
+
+* `video_path` — directory the video lives in.
+* `video_name` — file name of the video.
+* `status` — `Unprocessed`, `finished`, or `error`.
+* `first_seen` — when the video was first added to the log.
+* `last_processed` — when it was last processed successfully.
+* `version_last_processed` — the SLEAPyTracks version used for the last successful processing.
+* `last_attempt` — when processing was last attempted.
+* `last_status_change` — when the status last changed.
+* `total_frames` — number of frames in the video.
+* `percent_labeled_frames` — percentage of frames that the model labeled.
+* `error_message` — the last error message (empty when there is none).
+
 ### CSV columns ###
 
-The CSV is the main output for downstream analysis. It uses plain, self-describing column headers so it can be opened and used without needing SLEAPyTracks or SLEAP itself (interoperable and reusable):
+The CSV is the main output for downstream analysis. The file contains self-describing column headers and can be used without needing SLEAPyTracks or SLEAP itself:
 
 * `video` — path to the source video file.
 * `frame_idx` — frame number the row corresponds to.
