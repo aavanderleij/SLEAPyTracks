@@ -70,7 +70,9 @@ class SleapParser:
 
         # get video shape
         (video_frame_count, video_height, video_width, c) = self.labels.video.shape
-        n_labeled_frames = len(self.labels.labeled_frames)
+        # count the frames the model actually found something in. A frame can be in
+        # the slp file with no instances at all, those should not count as labeled.
+        n_labeled_frames = sum(1 for frame in self.labels.labeled_frames if frame.instances)
         percent_labeled_frames = 100 * n_labeled_frames / video_frame_count
         logger.debug(f"frame count video: {video_frame_count}")
         logger.debug(f"{n_labeled_frames} of video frames have labels")

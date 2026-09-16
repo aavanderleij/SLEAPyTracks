@@ -1,6 +1,6 @@
 
 # README SLEAPyTracks #
-* Version 1.1.0
+* Version 1.2.0
 
 
 ## What is this repository for? ##
@@ -8,7 +8,9 @@
 This is a tracker for tracking exploration behavior of the red knot. Currently trained for use on red knot exploration tests.
 Runs a trained SLEAP model over multiple videos and returns tracking data as CSV files.
 
-With the update of SLEAP version 1.5.0, major changes were made to the framework. This current version is compatible with SLEAP 1.6.3.
+With the update of SLEAP version 1.5.0, major changes were made to the framework. SLEAPyTracks follows the newest SLEAP release and is tested with SLEAP 1.6.5.
+
+**If you already have SLEAP installed, please update it.** SLEAP 1.6.5 renamed a module SLEAPyTracks depends on. SLEAPyTracks still runs on older versions, but it will warn you in the log that you need to update. See [Updating SLEAP](#updating-sleap) below.
 
 Main functionality: 
 * SLEAPyTracks will search input directory (and all subdirectories) for videos and analyze all found mp4 files.
@@ -95,6 +97,27 @@ git pull
 
 Remember to save any custom model files you want to keep somewhere else, files in the model file will be overwritten.
 
+### Updating SLEAP ###
+
+SLEAPyTracks is tested with the newest SLEAP release. If you installed SLEAP a while ago, update it in the same
+environment you installed it in:
+
+```bash
+conda activate sleap
+```
+
+```bash
+pip install --upgrade "sleap[nn]" --extra-index-url https://download.pytorch.org/whl/cpu --index-url https://pypi.org/simple
+```
+
+You can check which version you have with:
+
+```bash
+pip show sleap
+```
+
+If SLEAPyTracks finds an old version it will still run, but it writes a warning to the log asking you to update.
+
 ## Usage ##
 
 With the Anaconda powershell start the sleap virtual environment.
@@ -132,12 +155,52 @@ By default every video SLEAPyTracks processes, 3 files are created as output. Al
 
 ### Run-level files ###
 
-In addition to the per-video files above, SLEAPyTracks writes two files once per run in the root of the input directory you point it at (the directory given on the command line). These track the run as a whole rather than a single video.
+In addition to the per-video files above, SLEAPyTracks writes two files once per run. These track the run as a whole rather than a single video.
 
-| File | Location | Description |
-|---|---|---|
-| `SLEAPyTracks_<timestamp>.log` | Root of the input directory | Full run log. Everything SLEAPyTracks reports while running (info, warnings and errors) is written here, with a timestamp on every line. A new file is created for each run, named after the date and time the run started. Useful for checking what happened or reporting a problem. |
-| `SLEAPyTracks_processing_log.json` | Root of the input directory | Persistent record of every video SLEAPyTracks has seen in this directory and how far it got. Updated as the run progresses and kept between runs, so it builds up a history. See the fields below. |
+| File | Description |
+|---|---|
+| `logs/SLEAPyTracks_<timestamp>.log` | Full run log. Everything SLEAPyTracks reports while running (info, warnings and errors) is written here, with a timestamp on every line. A new file is created for each run, named after the date and time the run started. Useful for checking what happened or reporting a problem. |
+| `SLEAPyTracks_processing_log.json` | Persistent record of every video SLEAPyTracks has seen and how far it got. Updated as the run progresses and kept between runs, so it builds up a history. See the fields below. |
+
+#### Where these files go ####
+
+You do not have to point SLEAPyTracks at the same folder every time for the status to stay in one place. On startup it looks for an existing `SLEAPyTracks_processing_log.json` in the directory you gave it, and then in each folder above it. The first one it finds is the one it uses. The processing log is updated there, and the run log is written to a `logs` subfolder next to it. A new run log is made every run, so keeping them in their own folder stops them piling up next to your videos.
+
+This means you can keep **one log per year folder** that covers every video underneath it:
+
+```
+Z:\redknot_videos\
+├── 2018\
+│   ├── SLEAPyTracks_processing_log.json   <- covers everything in 2018
+│   └── logs\                              <- one run log per run
+│   │   ├── SLEAPyTracks_20260916_100311.log
+│   │   └── SLEAPyTracks_20260916_102004.log
+│   └── top down\
+│       └── FO1_2019-08-28_Z119510.MP4
+├── 2019\
+│   ├── SLEAPyTracks_processing_log.json   <- covers everything in 2019
+│   ├── logs\
+│   └── top down\
+│       └── FO1_2019-08-28_Z119510.MP4
+└── 2020\
+```
+
+Running against `Z:\redknot_videos\2019\top down` finds and updates the log in `2019`. The first line of every run log tells you which log file was used, so you can check it landed where you expected.
+
+Two things to know:
+
+* **Starting a new year folder.** If no log is found anywhere above the folder you gave, a new one is created in that folder. So to start `2021`, run against `Z:\redknot_videos\2021` once (or just create an empty file called `SLEAPyTracks_processing_log.json` there). If you run against `2021\top down` first, the log is created in `top down` instead.
+* **Run per year folder, not the whole drive.** Pointing at `Z:\redknot_videos` itself would create a separate log at that level and record the videos a second time. SLEAPyTracks only looks "up" for log files not down.
+
+If the folder holding the log cannot be written to (network drive not connected, for example), SLEAPyTracks writes a warning and falls back to the directory you gave it, so the run still finishes.
+
+You can always override the search with `--log_dir`:
+
+```bash
+python SLEAPyTracks "path/to/your/video_dir/location/" --log_dir "Z:/redknot_videos/2019"
+```
+
+#### Processing log fields ####
 
 The processing log is a JSON file. Every video is registered with status `Unprocessed` as soon as it is found (before any prediction runs) and then updated to `finished` or `error`. Each entry holds:
 
@@ -177,7 +240,9 @@ Automatically fix video index errors. (with the new version this option might no
 python SLEAPyTracks "path/to/your/video_dir/location/" -f
 ```
 
-Re-analyze videos. By default SLEAPyTracks will skip videos that already have a slp file with the same name, only running the model on "new" videos
+Re-analyze videos. By default SLEAPyTracks skips every video the processing log has marked `finished`, only running the model on videos that are new, unfinished, or that ended in an error last time. A skipped video is passed over completely: its CSV, montage and track video are not made again either. Use `-r` to redo everything regardless of what the log says.
+
+Because of this, `-t` on a folder of already finished videos does nothing on its own. Combine it with `-r` to render track videos for videos that are already done.
 
 ```bash
 python SLEAPyTracks "path/to/your/video_dir/location/" -r

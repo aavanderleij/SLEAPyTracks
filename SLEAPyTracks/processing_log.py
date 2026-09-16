@@ -2,10 +2,12 @@
 """
 Keeps a persistent JSON log of which videos SLEAPyTracks has seen and processed.
 
-The log lives next to the videos (in the root video directory) as
-``video_processing_log.json``. Videos are registered with status "Unprocessed"
-as soon as they are found, before any prediction runs, and updated to "finished"
-or "error" afterwards.
+The log is called ``SLEAPyTracks_processing_log.json``. It does not have to sit
+in the directory that is being tracked: ``find_log_dir`` walks up from that
+directory and uses the first existing log it finds, so one log placed in a year
+folder covers every video beneath it. Videos are registered with status
+"Unprocessed" as soon as they are found, before any prediction runs, and updated
+to "finished" or "error" afterwards.
 
 The log is a JSON object keyed by the absolute path of the video file. Each entry
 holds the columns below:
@@ -50,14 +52,62 @@ def _now():
     return datetime.now().isoformat()
 
 
+def find_log_dir(video_dir):
+    """
+    Find the directory the run level files belong in.
+
+    The processing log itself is written here, the run log goes in a "logs"
+    subfolder of it.
+
+    Walks up from video_dir and returns the first directory that already
+    contains a processing log. This way one log per year folder covers every
+    video beneath it, no matter which subfolder SLEAPyTracks is pointed at.
+    Falls back to video_dir when no log is found higher up.
+
+    This runs before logging is set up, so it does not log itself. It returns
+    notes for the caller to write to the log once logging is ready.
+
+    :param video_dir: directory given on the command line
+    :return: tuple of (log_dir, notes), notes is a list of (level, message)
+    """
+    notes = []
+    start_dir = os.path.abspath(video_dir)
+
+    current = start_dir
+    while True:
+        if os.path.isfile(os.path.join(current, LOG_FILE_NAME)):
+            if os.access(current, os.W_OK):
+                notes.append(("info", f"Using the processing log in: {current}"))
+                return current, notes
+            # log found but the drive is gone or read only
+            notes.append((
+                "warning",
+                f"Found a processing log in {current} but it can not be written to. "
+                f"Writing this run's files to {start_dir} instead."))
+            notes.append(("info", f"Using the processing log in: {start_dir}"))
+            return start_dir, notes
+
+        parent = os.path.dirname(current)
+        # stop at the root of the drive
+        if parent == current:
+            break
+        current = parent
+
+    notes.append((
+        "info",
+        f"No processing log found in {start_dir} or any folder above it. "
+        f"Starting a new one in: {start_dir}"))
+    return start_dir, notes
+
+
 class ProcessingLog:
     """
-    Reads, updates and writes video_processing_log.json in the root video dir.
+    Reads, updates and writes SLEAPyTracks_processing_log.json in the log dir.
     """
 
-    def __init__(self, root_video_dir):
-        self.root_video_dir = root_video_dir
-        self.log_path = os.path.join(root_video_dir, LOG_FILE_NAME)
+    def __init__(self, log_dir):
+        self.log_dir = log_dir
+        self.log_path = os.path.join(log_dir, LOG_FILE_NAME)
         self.records = self._load()
 
     def _load(self):
@@ -80,12 +130,47 @@ class ProcessingLog:
         except OSError as error:
             logger.error(f"Could not write processing log to {self.log_path}: {error}")
 
+    def _key(self, video_path):
+        """
+        Return the key a video is stored under in the log.
+
+        Kept in one place so the keying rule is defined once.
+
+        :param video_path: full path to the video file
+        :return: key string for self.records
+        """
+        return os.path.abspath(video_path)
+
     def _get_or_create(self, video_path):
         """Return the record for a video, creating it if it does not exist yet."""
-        key = os.path.abspath(video_path)
+        key = self._key(video_path)
         if key not in self.records:
             self.register_video(video_path)
         return self.records[key]
+
+    def get_record(self, video_path):
+        """
+        Return the stored record for a video, or None when it is not in the log.
+
+        Read only: nothing is created and nothing is written.
+
+        :param video_path: full path to the video file
+        :return: the record dict, or None
+        """
+        return self.records.get(self._key(video_path))
+
+    def get_status(self, video_path):
+        """
+        Return the status recorded for a video.
+
+        :param video_path: full path to the video file
+        :return: "Unprocessed", "finished" or "error", or None when the video
+                 is not in the log at all
+        """
+        record = self.get_record(video_path)
+        if record is None:
+            return None
+        return record.get("status", STATUS_UNPROCESSED)
 
     def register_video(self, video_path):
         """
@@ -96,14 +181,16 @@ class ProcessingLog:
 
         :param video_path: full path to the video file
         """
-        key = os.path.abspath(video_path)
+        key = self._key(video_path)
         if key in self.records:
             return
 
         now = _now()
+        # take these from the key so they are always a full, normalised path,
+        # also when SLEAPyTracks was given a relative directory
         self.records[key] = {
-            "video_path": os.path.dirname(video_path),
-            "video_name": os.path.basename(video_path),
+            "video_path": os.path.dirname(key),
+            "video_name": os.path.basename(key),
             "status": STATUS_UNPROCESSED,
             "first_seen": now,
             "last_processed": None,

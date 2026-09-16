@@ -1,0 +1,7 @@
+# Test videos and everything SLEAPyTracks generates from them.
+test_videos/
+
+# Python
+__pycache__/
+*.py[cod]
+.vscode/

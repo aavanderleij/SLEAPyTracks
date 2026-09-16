@@ -9,10 +9,51 @@ author: Antsje van der Leij
 
 import sys
 import glob
-from sleap_nn.predict import run_inference
 from logging_config import get_logger
 
 logger = get_logger(__name__)
+
+# sleap-nn 0.3.0 replaced run_inference() with sleap_nn.inference.predict().
+# run_inference() still works but is deprecated and will be removed, so use the
+# new function when it is there. Older versions fall back to run_inference, which
+# takes different argument names, so both are wrapped in run_prediction below.
+try:
+    from sleap_nn.inference import predict as _predict
+
+    def run_prediction(video, model_paths, output_path):
+        """
+        Run the model on one video and save the predictions.
+
+        :param video: path to the video file
+        :param model_paths: list of paths to the trained model folders
+        :param output_path: path to write the .slp file to
+        :return: sleap_io Labels object with the predicted instances
+        """
+        # clean_empty_frames defaults to False in sleap-nn, which keeps a frame in
+        # the slp file even when the model found nothing in it. run_inference used
+        # to drop those, so keep dropping them to get the same slp file as before.
+        return _predict(source=video, model_paths=model_paths,
+                        output_path=output_path, clean_empty_frames=True)
+
+except ImportError:
+    from sleap_nn.predict import run_inference as _run_inference
+
+    logger.warning(
+        "You are using an old version of sleap-nn. SLEAPyTracks is tested with "
+        "the newest SLEAP, please update it. See the installation instructions "
+        "in the SLEAPyTracks README.")
+
+    def run_prediction(video, model_paths, output_path):
+        """
+        Run the model on one video and save the predictions (old sleap-nn).
+
+        :param video: path to the video file
+        :param model_paths: list of paths to the trained model folders
+        :param output_path: path to write the .slp file to
+        :return: sleap_io Labels object with the predicted instances
+        """
+        return _run_inference(data_path=video, model_paths=model_paths,
+                              make_labels=True, output_path=output_path)
 
 
 class SLEAPModel:
@@ -23,7 +64,6 @@ class SLEAPModel:
     """
 
     def __init__(self, video_file_path):
-        # init
         # set class vars
 
         self.video_path = video_file_path
@@ -44,12 +84,9 @@ class SLEAPModel:
 
         logger.info(f"Loading pre-trained model and running inference on {video}")
         # Run inference
-        labels = run_inference(
-            data_path=video,
+        labels = run_prediction(
+            video=video,
             model_paths=glob.glob('model/*'),
-            make_labels=True,
-            # frames=list(range(20,70,1)),
-            return_confmaps=True,
             output_path=output_path)
 
         return labels
